@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://kit.fontawesome.com/1eba91a3d4.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="assets/css/base.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="shortcut icon" href="#">
+    <title>Nui Mp3</title>
+</head>
+<body>
+    <div class="player">
+        <div class="dashboard">
+            <header>
+                <h4>Now playing:</h4>
+                <h2>Pastlives</h2>
+            </header>
+            <div class="cd">
+                <div class="cd-thumb" style="background-image: url( assets/img/song1.jpg); background-repeat: no-repeat;width: 100%;height: 100%;"></div>
+            </div>
+
+            <div class="control">
+                <div class="btn btn-repeat">
+                    <i class="repeat-icon fa-solid fa-arrow-rotate-right"></i>
+                </div>
+                <div class="btn btn-prev">
+                    <i class="prev-icon fa-solid fa-backward-step"></i>
+                </div>
+                <div class="btn btn-toggle-play">
+                    <i class="pause-icon fa-solid fa-circle-pause"></i>
+                    <i class="play-icon fa-solid fa-circle-play"></i>
+                </div>
+                <div class="btn btn-next">
+                    <i class="next-icon fa-solid fa-forward-step"></i>
+                </div>
+                <div class="btn btn-random">
+                    <i class="random-icon fa-solid fa-shuffle"></i>
+                </div>
+            </div>
+            <input type="range" id="progress" class="progress" max="100" min="0" value="0" step="1" />
+            <audio src=""></audio>
+        </div>
+
+        <div class="playlist">
+            
+        </div>
+    </div>
+
+    <script>
+        const $ = document.querySelector.bind(document);
+        const $$ = document.querySelectorAll.bind(document);
+
+        const playlist = $('.playlist');
+        const cd = $('.cd');
+        const heading = $('header h2');
+        const cdThumb = $('.cd-thumb');
+        const audio = $('audio');
+        const playBtn = $('.btn-toggle-play');
+        const progress = $('#progress');
+        const nextBtn = $('.btn-next');
+        const prevBtn = $('.btn-prev');
+        const randomBtn = $('.btn-random');
+        const repeatBtn = $('.btn-repeat');
+
+        const app = {
+            currentIndex: 0,
+            isPlaying: false,
+            isRandom: false,
+            isRepeat: false,
+
+            songs: [
+                {
+                    name: 'Pastlives',
+                    singer: 'sapientdream',
+                    path: 'assets/song/song1.mp3',
+                    image: 'assets/img/song1.jpg',
+                }, 
+
+                {
+                    name: 'Thằng Điên',
+                    singer: 'Justatee x Phuong Ly',
+                    path: 'assets/song/song2.mp3',
+                    image: 'assets/img/song2.jpg',
+                },
+
+                {
+                    name: 'Hạ Còn Vương Nắng',
+                    singer: 'Datkaa',
+                    path: 'assets/song/song3.mp3',
+                    image: 'assets/img/song3.jpg',
+                },
+
+                {
+                    name: 'Yêu Từ Đâu Mà Ra',
+                    singer: 'Lil Zpoet',
+                    path: 'assets/song/song4.mp3',
+                    image: 'assets/img/song4.jpg',
+                },
+
+                {
+                    name: 'Đã Lỡ Yêu Em Nhiều',
+                    singer: 'Justatee',
+                    path: 'assets/song/song5.mp3',
+                    image: 'assets/img/song5.jpg',
+                },
+
+                {
+                    name: 'Yêu Một Người Có Lẽ',
+                    singer: 'Lou Hoang',
+                    path: 'assets/song/song6.mp3',
+                    image: 'assets/img/song6.jpg',
+                },
+
+                
+            ],
+
+            render: function() {
+                const htmls = this.songs.map((song, index) => {
+                    return `
+                        <div class="song ${index === this.currentIndex ? 'playing' : ''}" data-index="${index}">
+                            <div class="wrap">
+                                <div class="thumb">
+                                    <img src="${song.image}" alt="">
+                                </div>
+                                <div class="body">
+                                    <h2>${song.name}</h2>
+                                    <p>${song.singer}</p>
+                                </div>
+                            </div>
+                            <div class="option">
+                                <i class="option-icon fa-solid fa-bars"></i>
+                            </div>
+                        </div>
+                    `
+                })
+                playlist.innerHTML = htmls.join('');
+            },
+
+            defineProperties: function() {
+                Object.defineProperty(this, 'currentSong', {
+                    get: function() { 
+                        return this.songs[this.currentIndex];
+                    }
+                })
+            },
+
+            handleEvents: function() {
+                const _this = this;
+                const cdWidth = cd.offsetWidth;
+
+                //CD rotate
+                cdThumbAnimate = cdThumb.animate([
+                    {transform: 'rotate(360deg)'}
+                ], {
+                    duration: 10000,
+                    iterations: Infinity,
+                })
+
+                cdThumbAnimate.pause();
+
+                document.onscroll = function() {
+                    const scrollTop = window.scrollY;
+                    const newCdWidth = cdWidth - scrollTop;
+
+                    if(newCdWidth >= 0) {
+                        cd.style.width = newCdWidth + 'px';
+                    } else {
+                        cd.style.width = 0;
+                    }
+                    cd.style.opacity = newCdWidth / cdWidth;                    
+                }
+
+                //When click play
+                playBtn.onclick = function() {
+                    if(_this.isPlaying) {
+                        audio.pause();
+                    } else {
+                        audio.play();
+                    }                   
+                }
+
+                audio.onplay = function() {
+                    _this.isPlaying = true;
+                    playBtn.classList.add('is-playing');
+                    cdThumbAnimate.play();
+                }
+
+                audio.onpause = function() {
+                    _this.isPlaying = false;
+                    playBtn.classList.remove('is-playing');
+                    cdThumbAnimate.pause(); 
+                }
+
+                audio.ontimeupdate = function() {
+                    if(audio.duration) {
+                        const progressPecent = Math.floor(audio.currentTime / audio.duration * 100);
+                        progress.value = progressPecent;
+                    }
+                }
+
+                progress.onchange = function(e) {
+                    const seekTime = e.target.value / 100 * audio.duration;
+                    audio.currentTime = seekTime;
+                }
+
+                nextBtn.onclick = function() {
+                    if(_this.isRandom) {
+                        _this.randomSong();
+                        audio.play();
+                    }
+                    else {
+                        _this.nextSong();
+                        audio.play();
+                    }
+                    _this.render();
+                    _this.scrollToActiveSong();
+                }
+
+                prevBtn.onclick = function() {
+                    if(_this.isRandom) {
+                        _this.randomSong();
+                        audio.play();
+                    } else {
+                        _this.prevSong();
+                        audio.play();
+                    }                    
+                    _this.render(); 
+                    _this.scrollToActiveSong();
+                }
+
+                randomBtn.onclick = function() {
+                    if(_this.isRandom == false) {
+                        _this.isRandom = true;
+                        randomBtn.classList.add('active');
+                    }
+                    else {
+                        _this.isRandom = false;
+                        randomBtn.classList.remove('active');
+                    }
+                }
+
+                repeatBtn.onclick = function() {
+                    if(!_this.isRepeat) {
+                        repeatBtn.classList.add('active');
+                        _this.isRepeat = true;
+                    } else {
+                        repeatBtn.classList.remove('active');
+                        _this.isRepeat = false;
+                    }
+                }
+
+                audio.onended = function() {
+                    if(_this.isRepeat) {
+                        audio.play();
+                    } else {
+                        nextBtn.click();
+                    }
+                }
+
+                playlist.onclick = function(e) {
+                    const songNode = e.target.closest('.song:not(.active)')
+                    if(songNode || e.target.closest('.option')) {
+                        if(songNode) {
+                            _this.currentIndex = Number(songNode.dataset.index);
+                            _this.loadCurrentSong();
+                            audio.play();
+                            _this.render();
+                        }
+                    }
+                }
+            },
+            
+            scrollToActiveSong: function() {
+                setTimeout(() => {
+                    $('.song.playing').scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                    }); //
+                }, 100)
+            },
+
+            loadCurrentSong: function() {
+                heading.textContent = this.currentSong.name;
+                cdThumb.style.backgroundImage = `url(${this.currentSong.image})`;
+                audio.src = this.currentSong.path;
+            },
+
+            nextSong: function() {
+                this.currentIndex++;
+                if(this.currentIndex >= this.songs.length) {
+                    this.currentIndex = 0;
+                }
+                this.loadCurrentSong();
+            },
+
+            prevSong: function() {
+                this.currentIndex--;
+                if(this.currentIndex < 0) {
+                    this.currentIndex = this.songs.length - 1;
+                }
+                this.loadCurrentSong();
+            },
+
+            randomSong: function() {
+                const mark = this.currentIndex;
+                do {
+                    this.currentIndex = Math.floor(Math.random() * this.songs.length);
+                } while(this.currentIndex === mark)
+                this.loadCurrentSong();
+            },
+
+            
+
+            start: function() {
+                this.defineProperties();
+                
+
+                this.handleEvents();
+
+                this.loadCurrentSong();
+
+                this.render();
+            }
+        }
+
+        app.start();
+    </script>
+</body>
+</html>
+
+<!-- 1. Render song
+2. Scroll top
+3. Play / pause / seek
+4. CD rotate
+5. Next / prev
+6. Random 
+7. Next / Repeat when ended
+8. Active song
+9. Scroll active song into view 
+10. Play song when click -->
